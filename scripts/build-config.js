@@ -1,7 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 
-const publicOrigin = (process.env.HOT_DESK_PUBLIC_ORIGIN || "").trim().replace(/\/$/, "");
+const inferredVercelOrigin = (function () {
+  const prod = (process.env.VERCEL_PROJECT_PRODUCTION_URL || "").trim();
+  if (prod) return "https://" + prod.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  const preview = (process.env.VERCEL_URL || "").trim();
+  if (preview) return "https://" + preview.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  return "";
+})();
+const publicOrigin = (process.env.HOT_DESK_PUBLIC_ORIGIN || inferredVercelOrigin || "").trim().replace(/\/$/, "");
 const apiBase = (process.env.HOT_DESK_API || "https://cabackend.herokuapp.com").trim().replace(/\/$/, "");
 const autoDevSession = (process.env.HOT_DESK_AUTO_DEV_SESSION || "0").trim() === "1";
 
@@ -17,4 +24,5 @@ const content =
 
 fs.writeFileSync(outFile, content, "utf8");
 console.log("[build-config] wrote Frontend/hot-desk-config.js");
+console.log("[build-config] HOT_DESK_PUBLIC_ORIGIN =", publicOrigin || "(empty)");
 console.log("[build-config] HOT_DESK_API =", apiBase);

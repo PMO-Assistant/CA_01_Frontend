@@ -1040,23 +1040,42 @@ function setupCardLoginGate(options) {
 
     resolvePairingFrontendOrigin()
       .then(function (originForPhone) {
-        const originForPhoneNorm = (originForPhone || window.location.origin).replace(/\/$/, "");
-        const pairPageStatic = new URL("pages/nfc-pair/index.html", originForPhoneNorm + "/");
-        pairUrlA.href = pairPageStatic.href;
-        pairUrlA.textContent = pairPageStatic.href;
-        renderPairingQr(pairPageStatic.href);
-        if (pairStatusEl) {
-          if (isLoopbackHostname(pairPageStatic.hostname)) {
-            pairStatusEl.textContent =
-              "This link is still localhost — your phone cannot open it. Use ngrok or HOT_DESK_PUBLIC_ORIGIN.";
-          } else {
-            pairStatusEl.textContent =
-              "Open this on your phone, tap Scan, and hold the badge to log in there.";
-          }
-        }
-        if (window.lucide && typeof window.lucide.createIcons === "function") {
-          window.lucide.createIcons();
-        }
+        hotDeskApiJsonSimple("POST", "/api/nfc-pairing/sessions", {})
+          .then(function (session) {
+            stopPairPolling();
+            activePairingId = session && session.id ? String(session.id) : "";
+            if (!activePairingId) throw new Error("Could not create pairing session.");
+            const originForPhoneNorm = (originForPhone || window.location.origin).replace(/\/$/, "");
+            const pairPageStatic = new URL("pages/nfc-pair/index.html", originForPhoneNorm + "/");
+            pairPageStatic.searchParams.set("pairing", activePairingId);
+            pairUrlA.href = pairPageStatic.href;
+            pairUrlA.textContent = pairPageStatic.href;
+            renderPairingQr(pairPageStatic.href);
+            if (pairStatusEl) {
+              if (isLoopbackHostname(pairPageStatic.hostname)) {
+                pairStatusEl.textContent =
+                  "This link is still localhost — your phone cannot open it. Use ngrok or HOT_DESK_PUBLIC_ORIGIN.";
+              } else {
+                pairStatusEl.textContent =
+                  "Open this on your phone, tap Scan, and hold the badge to log in on this desktop.";
+              }
+            }
+            pollPairingOnce(activePairingId);
+            pairPollTimer = setInterval(function () {
+              if (!activePairingId) return;
+              pollPairingOnce(activePairingId);
+            }, 1500);
+            if (window.lucide && typeof window.lucide.createIcons === "function") {
+              window.lucide.createIcons();
+            }
+          })
+          .catch(function (errCreate) {
+            stopPairPolling();
+            if (pairStatusEl) {
+              pairStatusEl.textContent =
+                (errCreate && errCreate.message) || "Could not create a pairing session.";
+            }
+          });
       })
       .catch(function (err) {
         stopPairPolling();

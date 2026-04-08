@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>My bookings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #f7f8fa;
+      font-family: "Poppins", Verdana, Geneva, Tahoma, sans-serif;
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .top-bar {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+      padding: 12px 18px;
+      background: #ea580c;
+      color: #fff;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      z-index: 10;
+    }
+    .top-bar__back {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 0.15s ease;
+    }
+    .top-bar__back:hover {
+      background: rgba(255, 255, 255, 0.32);
+    }
+    .top-bar__back:active {
+      background: rgba(255, 255, 255, 0.14);
+      transform: scale(0.96);
+    }
+    .top-bar__back:focus {
+      outline: none;
+    }
+    .top-bar__back:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+    .top-bar__back svg {
+      display: block;
+    }
+    .top-bar__title {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+    .top-bar__meta {
+      width: 100%;
+      flex-basis: 100%;
+      font-size: 0.72rem;
+      font-weight: 500;
+      opacity: 0.88;
+      margin: -4px 0 0 56px;
+    }
+
+    .bookings-main {
+      flex: 1;
+      min-height: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 18px 18px 30px;
+      display: flex;
+      align-items: stretch;
+      gap: 16px;
+      scroll-snap-type: x proximity;
+    }
+
+    .bookings-empty {
+      width: 100%;
+      padding: 28px 16px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #64748b;
+    }
+    .bookings-empty code {
+      font-size: 0.82em;
+      word-break: break-word;
+    }
+
+    .booking-card {
+      flex: 0 0 min(420px, 92vw);
+      display: flex;
+      flex-direction: column;
+      min-height: min(420px, 88vh);
+      background: linear-gradient(180deg, #ffffff 0%, #fffbf8 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      scroll-snap-align: start;
+    }
+    .booking-card__body {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 12px 18px 18px;
+      display: flex;
+      flex-direction: column;
+    }
+    .booking-card__meta {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      flex: 0 0 auto;
+      width: 100%;
+      min-width: 0;
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .booking-card__main {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      width: 100%;
+    }
+    .booking-card__head {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      gap: 0;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .booking-card__footer {
+      flex: 0 0 auto;
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .booking-card__id {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #475569;
+      padding: 0;
+      line-height: 1;
+      flex-shrink: 0;
+      min-width: 0;
+    }
+    .booking-card__id i[data-lucide] {
+      width: 14px;
+      height: 14px;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+    .booking-card__when {
+      width: 100%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .booking-card__when-space {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .booking-card__when-space svg {
+      width: 108px;
+      height: 108px;
+      color: #f97316;
+      stroke-width: 1.9;
+    }
+    .booking-card__when-space-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #334155;
+      line-height: 1.2;
+      max-width: 100%;
+      white-space: nowrap;
+    }
+    .booking-card__when-time {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #0f172a;
+      line-height: 1.2;
+      margin-top: 4px;
+    }
+    .booking-card__when-date {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+      margin-top: 2px;
+    }
+    .booking-card__badge {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: auto;
+    }
+    .booking-card__badge--confirmed {
+      color: #166534;
+      background: #dcfce7;
+    }
+    .booking-card__badge--pending {
+      color: #a16207;
+      background: #fef9c3;
+    }
+    .booking-card__badge--cancelled {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+    .booking-card__badge--other {
+      color: #334155;
+      background: #f1f5f9;
+    }
+    .booking-card__detail {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: #475569;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+    .booking-card__detail i[data-lucide] {
+      width: 16px;
+      height: 16px;
+      color: #64748b;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .booking-card__detail strong {
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .booking-card__assets {
+      flex: 0 0 auto;
+      margin: 0 0 8px;
+      padding: 4px 6px;
+      border-radius: 7px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .booking-card__assets-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+    .booking-card__assets-row i[data-lucide] {
+      width: 11px;
+      height: 11px;
+      color: #ea580c;
+      flex-shrink: 0;
+    }
+    .booking-card__assets-label {
+      font-size: 0.62rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+    .booking-card__assets-text {
+      min-width: 0;
+      flex: 1;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #334155;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .booking-card__assets-more {
+      flex-shrink: 0;
+      padding: 1px 6px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #475569;
+      font-size: 0.62rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .booking-card__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      padding-top: 0;
+    }
+    .booking-card__btn {
+      flex: 1;
+      width: 100%;
+      min-width: 0;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: none;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    .booking-card__btn:active {
+      transform: scale(0.98);
+    }
+    .booking-card__btn--delete {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+    .booking-card__btn--delete:hover {
+      background: #fecaca;
+    }
+    .booking-card__btn--manage {
+      color: #ffffff;
+      background: #ea580c;
+    }
+    .booking-card__btn--manage:hover {
+      background: #f97316;
+    }
+
+    .bookings-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      max-width: min(92vw, 360px);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      background: #0f172a;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
+      pointer-events: none;
+    }
+    .bookings-toast.is-visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .bookings-toast--error {
+      background: #991b1b;
+    }
+
+    .confirm-modal[hidden] { display: none; }
+    .confirm-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.58);
+      backdrop-filter: blur(3px);
+    }
+    .confirm-modal__card {
+      width: min(420px, 96vw);
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.25);
+      overflow: hidden;
+    }
+    .confirm-modal__head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #fff7ed;
+      color: #9a3412;
+      font-weight: 800;
+      font-size: 0.98rem;
+    }
+    .confirm-modal__head i[data-lucide] {
+      width: 18px;
+      height: 18px;
+      color: #f97316;
+      flex-shrink: 0;
+    }
+    .confirm-modal__body {
+      padding: 16px;
+      color: #334155;
+      font-size: 0.92rem;
+      line-height: 1.45;
+    }
+    .confirm-modal__actions {
+      display: flex;
+      gap: 8px;
+      padding: 0 16px 16px;
+    }
+    .confirm-modal__btn {
+      flex: 1;
+      min-height: 42px;
+      border: none;
+      border-radius: 10px;
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .confirm-modal__btn--keep {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .confirm-modal__btn--cancel {
+      background: #dc2626;
+      color: #fff;
+    }
+
+    .assets-manage-modal[hidden] { display: none; }
+    .assets-manage-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 130;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.58);
+      backdrop-filter: blur(3px);
+    }
+    .assets-manage-modal__card {
+      width: min(520px, 96vw);
+      max-height: min(74vh, 680px);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.25);
+      overflow: hidden;
+    }
+    .assets-manage-modal__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #fff7ed;
+      color: #9a3412;
+      font-weight: 800;
+    }
+    .assets-manage-modal__title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.96rem;
+    }
+    .assets-manage-modal__title i[data-lucide] {
+      width: 18px;
+      height: 18px;
+      color: #f97316;
+    }
+    .assets-manage-modal__close {
+      border: none;
+      background: transparent;
+      color: #9a3412;
+      font-size: 1.2rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+    .assets-manage-modal__meta {
+      padding: 10px 16px 0;
+      color: #475569;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .assets-manage-modal__list {
+      flex: 0 0 auto;
+      height: min(40vh, 320px);
+      padding: 12px 16px 8px;
+      overflow-y: scroll;
+      overflow-x: hidden;
+      scrollbar-gutter: stable both-edges;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .assets-manage-modal__group-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #475569;
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 2px 0 2px;
+    }
+    .assets-manage-modal__group-title i[data-lucide] {
+      width: 14px;
+      height: 14px;
+      color: #64748b;
+    }
+    .assets-manage-modal__list::-webkit-scrollbar {
+      width: 10px;
+    }
+    .assets-manage-modal__list::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 999px;
+    }
+    .assets-manage-modal__list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+      border: 2px solid #f1f5f9;
+    }
+    .assets-manage-modal__list::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .assets-manage-modal__row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fff;
+    }
+    .assets-manage-modal__row input {
+      width: 18px;
+      height: 18px;
+      accent-color: #ea580c;
+      flex-shrink: 0;
+    }
+    .assets-manage-modal__item-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+    .assets-manage-modal__item-icon i[data-lucide] {
+      width: 16px;
+      height: 16px;
+    }
+    .assets-manage-modal__name {
+      flex: 1;
+      color: #0f172a;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .assets-manage-modal__status {
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .assets-manage-modal__empty {
+      color: #64748b;
+      font-size: 0.86rem;
+      padding: 8px 2px 10px;
+    }
+    .assets-manage-modal__actions {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .assets-manage-modal__btn {
+      flex: 1;
+      min-height: 42px;
+      border: none;
+      border-radius: 10px;
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .assets-manage-modal__btn--cancel {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .assets-manage-modal__btn--save {
+      background: #ea580c;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top-bar">
+      <button type="button" class="top-bar__back" id="btn-back" aria-label="Go back">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      <h1 class="top-bar__title">My bookings</h1>
+      <p class="top-bar__meta" id="top-bar-meta"></p>
+    </header>
+    <main class="bookings-main" id="bookings-root">
+      <p class="bookings-empty" id="bookings-status">Loading…</p>
+    </main>
+  </div>
+  <div class="bookings-toast" id="bookings-toast" role="status" aria-live="polite"></div>
+  <div class="confirm-modal" id="cancel-confirm-modal" hidden>
+    <div class="confirm-modal__card" role="dialog" aria-modal="true" aria-labelledby="cancel-confirm-title">
+      <div class="confirm-modal__head" id="cancel-confirm-title">
+        <i data-lucide="triangle-alert" aria-hidden="true"></i>
+        <span>Cancel this booking?</span>
+      </div>
+      <div class="confirm-modal__body">
+        This action cannot be undone.
+      </div>
+      <div class="confirm-modal__actions">
+        <button type="button" class="confirm-modal__btn confirm-modal__btn--keep" id="cancel-confirm-keep">Keep booking</button>
+        <button type="button" class="confirm-modal__btn confirm-modal__btn--cancel" id="cancel-confirm-yes">Yes, cancel booking</button>
+      </div>
+    </div>
+  </div>
+  <div class="assets-manage-modal" id="assets-manage-modal" hidden>
+    <div class="assets-manage-modal__card" role="dialog" aria-modal="true" aria-labelledby="assets-manage-title">
+      <div class="assets-manage-modal__head">
+        <div class="assets-manage-modal__title" id="assets-manage-title">
+          <i data-lucide="package-plus" aria-hidden="true"></i>
+          <span>Manage Assets</span>
+        </div>
+        <button type="button" class="assets-manage-modal__close" id="assets-manage-close" aria-label="Close">×</button>
+      </div>
+      <div class="assets-manage-modal__meta" id="assets-manage-meta"></div>
+      <div class="assets-manage-modal__list" id="assets-manage-list"></div>
+      <div class="assets-manage-modal__actions">
+        <button type="button" class="assets-manage-modal__btn assets-manage-modal__btn--cancel" id="assets-manage-cancel">Close</button>
+        <button type="button" class="assets-manage-modal__btn assets-manage-modal__btn--save" id="assets-manage-save">Save Assets</button>
+      </div>
+    </div>
+  </div>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/pages/my-bookings/script.js?v=booking-card-center-y-3"></script>
+</body>
+</html>

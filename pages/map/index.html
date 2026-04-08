@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Meta, fonts, Flatpickr, inline map-shell CSS (full viewport); desk SVG defs live in markup -->
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Floor plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #f7f8fa;
+      font-family: "Poppins", Verdana, Geneva, Tahoma, sans-serif;
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    /* orange header bar */
+
+    .top-bar {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 28px;
+      padding: 12px 18px;
+      background: #ea580c;
+      color: #fff;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      z-index: 10;
+    }
+    .top-bar__dates {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 14px 22px;
+    }
+    .top-bar__date-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .top-bar__date-field label {
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      opacity: 0.92;
+    }
+    /* date + time fields */
+
+    .top-bar__date-field input.flatpickr-input,
+    .top-bar__date-field input.date-input,
+    .top-bar__date-field .flatpickr-alt-input {
+      box-sizing: border-box;
+      min-height: 44px;
+      height: 44px;
+      padding: 0 8px;
+      border: none;
+      border-radius: 8px;
+      font: inherit;
+      color: #1e293b;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    .top-bar__date-field input.date-input:not(.time-input),
+    .top-bar__date-field .flatpickr-alt-input {
+      width: 12.75rem;
+      min-width: 12.75rem;
+      max-width: 12.75rem;
+      text-align: center;
+      font-size: 1.05rem;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .top-bar__date-field input[type="time"].time-input {
+      width: 6.75rem;
+      min-width: 6.75rem;
+      max-width: 6.75rem;
+      text-align: center;
+      font-size: 1.05rem;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .top-bar__date-field input[type="time"].time-input::-webkit-calendar-picker-indicator {
+      filter: opacity(0.65);
+      padding: 4px;
+      margin-left: 2px;
+    }
+    .top-bar__date-field .flatpickr-input[readonly] {
+      background: #fff;
+    }
+    /* flatpickr popup */
+
+    .flatpickr-calendar {
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      border-radius: 12px;
+    }
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+      background: #ea580c !important;
+      border-color: #ea580c !important;
+    }
+    .flatpickr-day:hover {
+      background: #ffedd5;
+      border-color: #fdba74;
+    }
+    .flatpickr-calendar,
+    .flatpickr-months,
+    .flatpickr-weekdays,
+    span.flatpickr-weekday,
+    .flatpickr-day {
+      font-family: "Poppins", Verdana, Geneva, Tahoma, sans-serif !important;
+    }
+    .top-bar__spacer {
+      flex: 1;
+      min-width: 8px;
+    }
+    /* assets toggle on the bar */
+
+    .top-bar__assets {
+      flex-shrink: 0;
+      align-self: stretch;
+      display: inline-flex;
+      align-items: center;
+      margin: -12px -18px -12px 0;
+      padding: 8px 16px 8px 20px;
+      border: none;
+      border-radius: 0;
+      border-left: 1px solid rgba(255, 255, 255, 0.28);
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 0.02em;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.14);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 0.15s ease;
+    }
+    .top-bar__assets:hover {
+      background: rgba(255, 255, 255, 0.24);
+    }
+    .top-bar__assets:active {
+      background: rgba(255, 255, 255, 0.18);
+    }
+    .top-bar__assets:focus {
+      outline: none;
+    }
+    .top-bar__assets:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: -4px;
+    }
+    .top-bar__assets-inner {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .top-bar__assets-icon {
+      display: block;
+      flex-shrink: 0;
+      opacity: 0.95;
+    }
+    .top-bar__assets-label {
+      white-space: nowrap;
+    }
+    .top-bar__assets-chevron {
+      display: block;
+      flex-shrink: 0;
+      opacity: 0.9;
+      transition: transform 0.25s ease;
+    }
+    .app.asset-panel-open .top-bar__assets-chevron {
+      transform: rotate(180deg);
+    }
+    .app.asset-panel-open .top-bar__assets {
+      background: rgba(255, 255, 255, 0.28);
+    }
+    /* back button */
+
+    .top-bar__back {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      margin-right: 8px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 0.15s ease;
+    }
+    .top-bar__back:hover {
+      background: rgba(255, 255, 255, 0.32);
+    }
+    .top-bar__back:active {
+      background: rgba(255, 255, 255, 0.14);
+      transform: scale(0.96);
+    }
+    .top-bar__back:focus {
+      outline: none;
+    }
+    .top-bar__back:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+    .top-bar__back svg {
+      display: block;
+    }
+    /* main map area + asset drawer */
+
+    .map-stage {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .map-stage__main {
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      position: relative;
+    }
+    /* svg root */
+
+    #floorplan {
+      width: 100%;
+      height: 100%;
+      display: block;
+      vector-effect: non-scaling-stroke;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    /* seats — kill focus ring noise */
+
+    .desk {
+      -webkit-touch-callout: none;
+    }
+    .desk,
+    .desk:focus,
+    .desk:focus-visible {
+      outline: none;
+    }
+    .meeting-hit:focus,
+    .meeting-hit:focus-visible {
+      outline: none;
+    }
+
+    /* walls corridor desks paint */
+
+    .windows, .walls { fill: #fff; stroke: #e6e6e6; stroke-width: 2; }
+    .walls .wall-divider { fill: none; stroke: #e6e6e6; stroke-width: 2; }
+    .desk-set { fill: #d8dce3; stroke: #ffffff; stroke-width: 2; }
+    .desk { cursor: pointer; }
+    .desk:hover { stroke: #ea580c; }
+    .desk.user-selected:hover { stroke: #ffffff; }
+    .desk.unavailable { cursor: not-allowed; stroke: #94a3b8; }
+    .user-selected { fill: #f97316; }
+    .unavailable { fill: #64748b; }
+    .desk.unavailable:hover { stroke: #94a3b8; }
+    .desk-cell:has(.desk.unavailable) .seat-label {
+      fill: #cbd5e1;
+      stroke: #475569;
+      stroke-width: 0.75px;
+    }
+    .grabbable { cursor: grab; }
+    .grabbable.active { cursor: grabbing; }
+    .grabbable.touching .walls,
+    .grabbable.touching .corridor,
+    .grabbable.touching .wall-line { stroke: #bada55; }
+    .corridor { fill: #e4e6eb; stroke: #cfd3dc; stroke-width: 2; }
+    .wall-line { fill: none; stroke: #e6e6e6; stroke-width: 2; }
+    .room-title {
+      font-size: 14px;
+      font-weight: 700;
+      fill: #6b7280;
+      font-family: "Poppins", Verdana, Geneva, Tahoma, sans-serif;
+    }
+    .desk-set .seat-label {
+      fill: #1e293b;
+      stroke: #f8fafc;
+      stroke-width: 0.75px;
+      paint-order: stroke fill;
+      font-size: 30px;
+      font-weight: 800;
+      font-family: "Poppins", Verdana, Geneva, Tahoma, sans-serif;
+      pointer-events: none;
+    }
+    .desk-cell:has(.user-selected) .seat-label {
+      fill: #ffffff;
+      stroke: #9a3412;
+      stroke-width: 0.75px;
+    }
+    /* meeting rooms — hover + booked gray */
+
+    .meeting-room .desk-set .table,
+    .meeting-room .desk-set .desk {
+      pointer-events: none;
+    }
+    .meeting-hit {
+      fill: #ffffff;
+      fill-opacity: 0;
+      cursor: pointer;
+      pointer-events: all;
+    }
+    .meeting-room .desk-set:not(.meeting-selected):has(.meeting-hit:hover) .table,
+    .meeting-room .desk-set:not(.meeting-selected):has(.meeting-hit:hover) .desk {
+      stroke: #ea580c;
+    }
+    .meeting-room .desk-set.meeting-selected .table,
+    .meeting-room .desk-set.meeting-selected .desk {
+      fill: #f97316;
+      stroke: #ffffff;
+    }
+    .meeting-room.meeting-unavailable .desk-set .table,
+    .meeting-room.meeting-unavailable .desk-set .desk {
+      fill: #64748b;
+      stroke: #94a3b8;
+    }
+    .meeting-room.meeting-unavailable .desk-set:not(.meeting-selected):has(.meeting-hit:hover) .table,
+    .meeting-room.meeting-unavailable .desk-set:not(.meeting-selected):has(.meeting-hit:hover) .desk {
+      stroke: #94a3b8;
+    }
+    .meeting-hit.meeting-hit--disabled {
+      pointer-events: none;
+      cursor: default;
+    }
+
+    /* selection summary bottom left */
+
+    .selection-dock {
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom, 0px));
+      left: max(16px, env(safe-area-inset-left, 0px));
+      z-index: 49;
+      width: min(288px, calc(100vw - 32px));
+      max-height: min(40vh, 220px);
+      overflow-y: auto;
+      padding: 12px 14px 14px;
+      background: #fff;
+      color: #0f172a;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(234, 88, 12, 0.18);
+      font-size: 0.82rem;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      -webkit-overflow-scrolling: touch;
+    }
+    .selection-dock.selection-dock--visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .selection-dock__title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #ea580c;
+      margin-bottom: 10px;
+    }
+    .selection-dock__section + .selection-dock__section {
+      margin-top: 10px;
+    }
+    .selection-dock__label {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+    .selection-dock__value {
+      font-size: 0.88rem;
+      font-weight: 600;
+      line-height: 1.35;
+      color: #0f172a;
+      margin: 0;
+    }
+    .selection-dock__list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .selection-dock__asset {
+      padding: 4px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.84rem;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+    .selection-dock__asset:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .selection-dock__asset--empty {
+      color: #94a3b8;
+      font-style: italic;
+      font-weight: 400;
+      border-bottom: none;
+    }
+
+    /* big next pill */
+
+    .next-fab {
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom, 0px));
+      right: max(16px, env(safe-area-inset-right, 0px));
+      z-index: 50;
+      padding: 20px 40px;
+      min-height: 60px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #fff;
+      background: #ea580c;
+      border: none;
+      border-radius: 9999px;
+      box-shadow: 0 4px 18px rgba(234, 88, 12, 0.45), 0 2px 6px rgba(0, 0, 0, 0.12);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    .next-fab.next-fab--visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .next-fab:hover {
+      background: #f97316;
+    }
+    .next-fab:active {
+      transform: scale(0.98);
+      background: #c2410c;
+    }
+    .next-fab:focus {
+      outline: none;
+    }
+    .next-fab:focus-visible {
+      outline: 3px solid #fff;
+      outline-offset: 3px;
+    }
+    .app.asset-panel-open .next-fab {
+      right: max(16px, env(safe-area-inset-right, 0px));
+    }
+    @media (min-width: 480px) {
+      .app.asset-panel-open .next-fab {
+        right: calc(16px + min(320px, 40vw) + env(safe-area-inset-right, 0px));
+      }
+    }
+
+    /* assets slideout + backdrop */
+
+    .asset-backdrop {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 40;
+      background: rgba(15, 23, 42, 0.35);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app.asset-panel-open .asset-backdrop {
+      display: block;
+    }
+    .asset-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 45;
+      width: min(320px, 92vw);
+      max-width: 100%;
+      background: #fff;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s ease;
+      border-left: 1px solid #e2e8f0;
+    }
+    .app.asset-panel-open .asset-panel {
+      transform: translateX(0);
+    }
+    .asset-panel__header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 14px 12px 18px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .asset-panel__header h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .asset-panel__close {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 10px;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 1.5rem;
+      line-height: 1;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .asset-panel__close:hover {
+      background: #cbd5e1;
+    }
+    .asset-panel__list {
+      flex: 1;
+      overflow: auto;
+      padding: 10px 0 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .asset-panel__group {
+      margin-bottom: 8px;
+    }
+    .asset-panel__group-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .asset-panel__group-title-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: #ea580c;
+    }
+    .asset-panel__group-title-icon svg {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+    .asset-panel__group-title-text {
+      line-height: 1.2;
+    }
+    .asset-panel__row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 18px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .asset-panel__row:hover {
+      background: #f8fafc;
+    }
+    .asset-panel__row input {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      accent-color: #ea580c;
+      flex-shrink: 0;
+    }
+    .asset-panel__row-text {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 10px;
+      font-size: 0.9rem;
+      color: #1e293b;
+      line-height: 1.35;
+      min-width: 0;
+    }
+    .asset-panel__row-name {
+      flex: 1;
+      min-width: 0;
+    }
+    .asset-panel__row--booked {
+      cursor: not-allowed;
+      background: #f1f5f9;
+      opacity: 0.95;
+    }
+    .asset-panel__row--booked:hover {
+      background: #e2e8f0;
+    }
+    .asset-panel__row--booked .asset-panel__row-name {
+      color: #64748b;
+      text-decoration: line-through;
+      text-decoration-color: #94a3b8;
+    }
+    .asset-panel__booked-badge {
+      flex-shrink: 0;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #64748b;
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+    .asset-panel__empty {
+      padding: 24px 18px;
+      font-size: 0.9rem;
+      color: #64748b;
+    }
+
+    .map-notice {
+      position: fixed;
+      left: 50%;
+      bottom: max(92px, calc(16px + env(safe-area-inset-bottom, 0px)));
+      transform: translateX(-50%) translateY(16px);
+      width: min(460px, calc(100vw - 28px));
+      background: #0f172a;
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 14px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+      z-index: 80;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    }
+    .map-notice.is-visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+    .map-notice--error { background: #991b1b; }
+    .map-notice--info { background: #0f172a; }
+    .map-notice__row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .map-notice__text { font-size: 0.92rem; line-height: 1.35; }
+    .map-notice__close {
+      border: none;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      height: 30px;
+      min-width: 30px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .booking-confirm {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 20% 15%, rgba(249, 115, 22, 0.16), transparent 48%),
+        rgba(15, 23, 42, 0.66);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 85;
+      padding: 20px;
+    }
+    .booking-confirm.is-open { display: flex; }
+    .booking-confirm__card {
+      width: min(520px, 100%);
+      background: linear-gradient(180deg, #ffffff 0%, #fffaf6 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.58);
+      box-shadow: 0 24px 44px rgba(2, 8, 23, 0.34);
+      overflow: hidden;
+      animation: bookingConfirmEnter 0.24s ease;
+    }
+    .booking-confirm__head {
+      background: linear-gradient(120deg, #fff7ed, #ffffff);
+      color: #0f172a;
+      padding: 18px 20px 14px;
+      font-weight: 700;
+      font-size: 1.12rem;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: inset 0 3px 0 #ea580c;
+      letter-spacing: 0.01em;
+    }
+    .booking-confirm__body { padding: 14px 20px 10px; color: #0f172a; }
+    .booking-confirm__row {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #e2e8f0;
+    }
+    .booking-confirm__row:last-child { margin-bottom: 0; }
+    .booking-confirm__label {
+      color: #475569;
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 0;
+    }
+    #confirm-date,
+    #confirm-time,
+    #confirm-space,
+    #confirm-assets {
+      font-weight: 600;
+      color: #0f172a;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .booking-confirm__actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 20px 18px;
+      background: rgba(255, 255, 255, 0.92);
+      border-top: 1px solid #e2e8f0;
+    }
+    .booking-confirm__btn {
+      border: none;
+      border-radius: 10px;
+      min-height: 40px;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease;
+    }
+    .booking-confirm__btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 7px 16px rgba(15, 23, 42, 0.14);
+    }
+    .booking-confirm__btn:focus-visible {
+      outline: 2px solid #ea580c;
+      outline-offset: 2px;
+    }
+    .booking-confirm__btn--cancel { background: #e2e8f0; color: #0f172a; }
+    .booking-confirm__btn--cancel:hover { background: #cbd5e1; }
+    .booking-confirm__btn--confirm { background: #ea580c; color: #fff; }
+    .booking-confirm__btn--confirm:hover { background: #c2410c; }
+    @media (max-width: 560px) {
+      .booking-confirm__row { grid-template-columns: 1fr; gap: 6px; }
+      .booking-confirm__actions { justify-content: stretch; }
+      .booking-confirm__btn { flex: 1; }
+    }
+    @keyframes bookingConfirmEnter {
+      from { opacity: 0; transform: translateY(8px); }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .booking-success {
+      position: fixed;
+      inset: 0;
+      background: #ea580c;
+      color: #fff;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 95;
+      text-align: center;
+      padding: 24px;
+    }
+    .booking-success.is-open { display: flex; }
+    .booking-success__title { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
+    .booking-success__text { font-size: 1.05rem; opacity: 0.95; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Layout: top bar, SVG stage + asset drawer, selection dock, next FAB; script.js renders seats -->
+
+    <header class="top-bar">
+      <button type="button" class="top-bar__back" id="btn-back" aria-label="Go back">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      <div class="top-bar__dates">
+        <div class="top-bar__date-field">
+          <label for="booking-date">Date</label>
+          <input type="text" id="booking-date" name="booking-date" class="date-input" placeholder="Pick day" readonly />
+        </div>
+        <div class="top-bar__date-field">
+          <label for="time-start">Start time</label>
+          <input type="time" id="time-start" name="time-start" class="date-input time-input" value="09:00" step="60" />
+        </div>
+        <div class="top-bar__date-field">
+          <label for="time-end">Finish time</label>
+          <input type="time" id="time-end" name="time-end" class="date-input time-input" value="17:00" step="60" />
+        </div>
+      </div>
+      <div class="top-bar__spacer" aria-hidden="true"></div>
+      <button
+        type="button"
+        class="top-bar__assets"
+        id="btn-assets-toggle"
+        aria-expanded="false"
+        aria-controls="asset-panel"
+      >
+        <span class="top-bar__assets-inner">
+          <svg class="top-bar__assets-icon" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16.5 9.4 7.55 4.24" />
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+            <line x1="12" y1="22.08" x2="12" y2="12" />
+          </svg>
+          <span class="top-bar__assets-label">Assets</span>
+          <svg class="top-bar__assets-chevron" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </span>
+      </button>
+    </header>
+
+    <div class="map-stage">
+      <div class="map-stage__main">
+        <svg
+          id="floorplan"
+          class="grabbable"
+          xmlns="http://www.w3.org/2000/svg"
+          preserveAspectRatio="xMidYMid meet"
+          viewBox="0 0 2070 1120"
+        >
+          <defs>
+            <g id="desk_type1">
+              <rect class="table" width="50" height="80" stroke="none" />
+              <circle cx="50" cy="40" r="15" />
+            </g>
+            <g id="desk_type2">
+              <path d="M-13-72v-175h175v57h-118v118Z" stroke="none" />
+              <circle cx="75" cy="-160" r="15" />
+            </g>
+            <g id="desk_type3">
+              <path d="m0 0 c25 -21 76 -21 101 0 l31 -55 l-78 -45 l-79 45z" stroke="none" />
+              <circle cx="52" cy="-13" r="15" />
+            </g>
+          </defs>
+
+          <g class="walls">
+            <rect x="30" y="30" width="2000" height="500" />
+            <rect x="30" y="580" width="2000" height="500" />
+          </g>
+          <rect class="corridor" x="30" y="530" width="2000" height="50" />
+          <g class="wall-lines" aria-hidden="true">
+            <path class="wall-line" d="M 30 30 H 2030 M 30 30 V 530 M 2030 30 V 530 M 30 1080 H 2030 M 30 1080 V 580 M 2030 1080 V 580 M 30 530 V 580 M 2030 530 V 580" />
+            <path class="wall-line" d="M 530 30 V 530 M 1030 30 V 530 M 1530 30 V 530 M 530 580 V 1080 M 1030 580 V 1080 M 1530 580 V 1080" />
+            <path class="wall-line" d="M 30 530 H 236 M 324 530 H 736 M 824 530 H 1236 M 1324 530 H 1736 M 1824 530 H 2030" />
+            <path class="wall-line" d="M 30 580 H 236 M 324 580 H 736 M 824 580 H 1236 M 1324 580 H 1736 M 1824 580 H 2030" />
+          </g>
+          <g class="windows">
+            <rect x="190" y="30" width="120" height="10" />
+            <rect x="690" y="30" width="120" height="10" />
+            <rect x="1190" y="30" width="120" height="10" />
+            <rect x="1690" y="30" width="120" height="10" />
+            <rect x="190" y="1070" width="120" height="10" />
+            <rect x="690" y="1070" width="120" height="10" />
+            <rect x="1190" y="1070" width="120" height="10" />
+            <rect x="1690" y="1070" width="120" height="10" />
+          </g>
+          <text class="room-title" x="40" y="54">Room A — 18 seats</text>
+          <text class="room-title" x="540" y="54">Room B — 18 seats</text>
+          <text class="room-title" x="1040" y="54">Room C — 18 seats</text>
+          <text class="room-title" x="1540" y="54">Room D — 18 seats</text>
+          <text class="room-title" x="40" y="606">Room E — 18 seats</text>
+          <text class="room-title" x="540" y="606">Room F — 9 seats</text>
+          <text class="room-title" x="1040" y="606">Room G — 9 seats</text>
+          <text class="room-title" x="1540" y="606">Room H — 9 seats</text>
+        </svg>
+      </div>
+
+      <div class="asset-backdrop" id="asset-backdrop" aria-hidden="true"></div>
+      <aside class="asset-panel" id="asset-panel" aria-hidden="true" aria-labelledby="asset-panel-title">
+        <div class="asset-panel__header">
+          <h2 id="asset-panel-title">Assets</h2>
+          <button type="button" class="asset-panel__close" id="asset-panel-close" aria-label="Close assets">×</button>
+        </div>
+        <div class="asset-panel__list" id="asset-list"></div>
+      </aside>
+    </div>
+
+    <aside
+      class="selection-dock"
+      id="selection-dock"
+      aria-live="polite"
+      aria-labelledby="selection-dock-heading"
+      aria-hidden="true"
+    >
+      <h2 class="selection-dock__title" id="selection-dock-heading">Your selection</h2>
+      <div class="selection-dock__section">
+        <span class="selection-dock__label">Space</span>
+        <p class="selection-dock__value" id="selection-dock-space"></p>
+      </div>
+      <div class="selection-dock__section">
+        <span class="selection-dock__label">Assets</span>
+        <ul class="selection-dock__list" id="selection-dock-assets" role="list"></ul>
+      </div>
+    </aside>
+
+    <button type="button" class="next-fab" id="btn-next" aria-label="Next, open my bookings" aria-hidden="true">
+      Next &gt;
+    </button>
+    <div class="map-notice map-notice--info" id="map-notice" role="status" aria-live="polite" aria-atomic="true">
+      <div class="map-notice__row">
+        <div class="map-notice__text" id="map-notice-text"></div>
+        <button type="button" class="map-notice__close" id="map-notice-close" aria-label="Close message">×</button>
+      </div>
+    </div>
+    <div class="booking-confirm" id="booking-confirm" aria-hidden="true">
+      <div class="booking-confirm__card" role="dialog" aria-modal="true" aria-labelledby="booking-confirm-title">
+        <div class="booking-confirm__head" id="booking-confirm-title">Confirm your booking</div>
+        <div class="booking-confirm__body">
+          <div class="booking-confirm__row"><span class="booking-confirm__label">Date:</span><span id="confirm-date"></span></div>
+          <div class="booking-confirm__row"><span class="booking-confirm__label">Time:</span><span id="confirm-time"></span></div>
+          <div class="booking-confirm__row"><span class="booking-confirm__label">Seat/Room:</span><span id="confirm-space"></span></div>
+          <div class="booking-confirm__row"><span class="booking-confirm__label">Assets:</span><span id="confirm-assets"></span></div>
+        </div>
+        <div class="booking-confirm__actions">
+          <button type="button" class="booking-confirm__btn booking-confirm__btn--cancel" id="confirm-cancel">Cancel</button>
+          <button type="button" class="booking-confirm__btn booking-confirm__btn--confirm" id="confirm-submit">Confirm Booking</button>
+        </div>
+      </div>
+    </div>
+    <div class="booking-success" id="booking-success" aria-hidden="true">
+      <div>
+        <div class="booking-success__title">Booking Confirmed</div>
+        <div class="booking-success__text">Redirecting you to the main page...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+  <!-- /pages/map + bare script.js resolves to /pages/script.js (404) -->
+  <script src="/pages/map/script.js"></script>
+</body>
+</html>

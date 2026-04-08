@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Permissions-Policy" content="nfc=(self)" />
+  <title>Scan card — pairing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/styling.css" />
+  <script src="/hot-desk-config.js"></script>
+</head>
+<body class="nfc-pair-page">
+  <main class="nfc-pair-main">
+    <h1 class="nfc-pair-title">Complete login</h1>
+    <p id="nfc-pair-lead" class="nfc-pair-lead">
+      Tap the button, then hold your badge to this phone when the browser asks.
+    </p>
+    <button type="button" id="nfc-pair-scan-btn" class="nfc-pair-scan-btn">
+      Scan NFC badge
+    </button>
+    <p id="nfc-pair-status" class="nfc-pair-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    <p class="nfc-pair-foot">
+      <a class="nfc-pair-back" href="/index.html">Back to home</a>
+    </p>
+  </main>
+  <script src="/pages/nfc-pair/script.js"></script>
+</body>
+</html>

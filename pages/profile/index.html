@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Manage profile</title>
+  <!-- Use site-root script URLs: for /pages/profile (no slash), ./script.js wrongly resolves to /pages/script.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <script src="/hot-desk-config.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #eef1f6;
+      font-family: "Poppins", Verdana, Geneva, Tahoma, sans-serif;
+      color: #0f172a;
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .top-bar {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      color: #fff;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 20px rgba(194, 65, 12, 0.35);
+      z-index: 10;
+    }
+    .top-bar__back {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      transition: background 0.15s ease;
+    }
+    .top-bar__back:hover {
+      background: rgba(255, 255, 255, 0.32);
+    }
+    .top-bar__back:active {
+      transform: scale(0.96);
+    }
+    .top-bar__back:focus {
+      outline: none;
+    }
+    .top-bar__back:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+    .top-bar__back svg {
+      display: block;
+    }
+    .top-bar__title {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      font-size: 1.08rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+    }
+    .top-bar__hint {
+      width: 100%;
+      flex-basis: 100%;
+      font-size: 0.72rem;
+      font-weight: 500;
+      opacity: 0.92;
+      margin: -4px 0 0 56px;
+    }
+
+    .profile-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 0 20px;
+    }
+
+    .profile-hero {
+      background: linear-gradient(180deg, #fff7ed 0%, #eef1f6 100%);
+      padding: 22px 18px 20px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .profile-hero__inner {
+      max-width: none;
+      margin: 0;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .profile-avatar {
+      flex-shrink: 0;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #fb923c, #ea580c);
+      color: #fff;
+      font-size: 1.35rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      letter-spacing: 0.04em;
+      box-shadow: 0 8px 24px rgba(234, 88, 12, 0.35);
+      border: 3px solid #fff;
+    }
+    .profile-hero__text {
+      min-width: 0;
+    }
+    .profile-hero__name {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #1e293b;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+    .profile-hero__meta {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .profile-hero__badge {
+      display: inline-flex;
+      margin-top: 8px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .profile-hero__badge.is-active {
+      background: rgba(22, 163, 74, 0.15);
+      color: #15803d;
+    }
+    .profile-hero__badge.is-inactive {
+      background: rgba(220, 38, 38, 0.12);
+      color: #b91c1c;
+    }
+
+    .profile-body {
+      max-width: none;
+      margin: 0;
+      padding: 12px 0 0;
+    }
+
+    .profile-body__top {
+      padding: 0 18px 12px;
+      max-width: 720px;
+    }
+
+    /* Horizontal panels for iPad / touch: swipe left ↔ right */
+    .profile-rail {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 14px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      padding: 4px 18px 16px;
+      margin: 0;
+    }
+    .profile-rail__panel {
+      flex: 0 0 min(560px, calc(100vw - 40px));
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      min-width: 0;
+    }
+    @media (min-width: 768px) {
+      .profile-rail__panel {
+        flex-basis: min(620px, calc(100vw - 80px));
+      }
+    }
+    .profile-card--in-rail {
+      margin-bottom: 0;
+      min-height: 100%;
+    }
+
+    .profile-status {
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: #64748b;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    .profile-status.profile-status--err {
+      color: #b91c1c;
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    .profile-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px 18px 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
+    }
+    .profile-card__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .profile-card__title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #475569;
+    }
+    .profile-card__tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .profile-dl {
+      display: grid;
+      grid-template-columns: minmax(0, 40%) 1fr;
+      gap: 12px 14px;
+      font-size: 0.88rem;
+    }
+    .profile-dl dt {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #94a3b8;
+      margin: 0;
+    }
+    .profile-dl dd {
+      margin: 0;
+      color: #1e293b;
+      word-break: break-word;
+      font-weight: 500;
+    }
+    .profile-dl dd.profile-mono {
+      font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+      font-size: 0.8rem;
+      font-weight: 400;
+    }
+
+    .profile-tags-empty {
+      font-size: 0.88rem;
+      color: #64748b;
+      text-align: center;
+      padding: 18px 12px;
+    }
+
+    .profile-tag-row {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      background: #fafafa;
+    }
+    .profile-tag-row--current {
+      border-color: #fdba74;
+      background: #fffbeb;
+      box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.15);
+    }
+    .profile-tag-row__badge {
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .profile-pill {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .profile-pill--accent {
+      background: rgba(234, 88, 12, 0.18);
+      color: #c2410c;
+    }
+    .profile-tag-row__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      font-size: 0.82rem;
+    }
+    .profile-tag-row__full {
+      grid-column: 1 / -1;
+    }
+    .profile-k {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #94a3b8;
+      margin-bottom: 2px;
+    }
+    .profile-v {
+      color: #1e293b;
+      word-break: break-word;
+    }
+
+    .profile-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (min-width: 420px) {
+      .profile-stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    .profile-stat {
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 12px;
+      padding: 12px 12px 10px;
+      min-height: 72px;
+    }
+    .profile-stat__value {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.15;
+    }
+    .profile-stat__label {
+      margin-top: 4px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+      line-height: 1.35;
+    }
+
+    .profile-name-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .profile-name-form__row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .profile-name-form input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 12px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #fff;
+      color: #0f172a;
+    }
+    .profile-name-form input[type="text"]:focus {
+      outline: none;
+      border-color: #fb923c;
+      box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.2);
+    }
+    .profile-name-form button[type="submit"] {
+      flex-shrink: 0;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      color: #fff;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .profile-name-form button[type="submit"]:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+    .profile-name-form__status {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #64748b;
+      min-height: 1.2em;
+    }
+    .profile-name-form__status.is-err {
+      color: #b91c1c;
+    }
+
+    .profile-pill--ok {
+      background: rgba(22, 163, 74, 0.15);
+      color: #15803d;
+    }
+    .profile-pill--warn {
+      background: rgba(234, 88, 12, 0.15);
+      color: #c2410c;
+    }
+    .profile-pill--bad {
+      background: rgba(220, 38, 38, 0.12);
+      color: #b91c1c;
+    }
+    .profile-pill--muted {
+      background: #e2e8f0;
+      color: #475569;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top-bar">
+      <button type="button" class="top-bar__back" id="profile-back" aria-label="Back to dashboard">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      <h1 class="top-bar__title">Manage profile</h1>
+      <p class="top-bar__hint">Swipe left or right below for Activity, account, and access cards.</p>
+    </header>
+
+    <main class="profile-scroll">
+      <div class="profile-hero" id="profile-hero" hidden>
+        <div class="profile-hero__inner">
+          <div class="profile-avatar" id="profile-avatar" aria-hidden="true">?</div>
+          <div class="profile-hero__text">
+            <div class="profile-hero__name" id="profile-hero-name">—</div>
+            <div class="profile-hero__meta" id="profile-hero-meta"></div>
+            <span class="profile-hero__badge" id="profile-hero-badge" hidden></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-body">
+        <div class="profile-body__top">
+          <p class="profile-status" id="profile-load-status" role="status">Loading your profile…</p>
+        </div>
+
+        <div class="profile-rail" id="profile-rail" aria-label="Profile sections">
+          <div class="profile-rail__panel">
+            <section class="profile-card profile-card--in-rail" id="profile-section-stats">
+              <div class="profile-card__head">
+                <h2 class="profile-card__title">Activity</h2>
+                <span class="profile-card__tag">Summary</span>
+              </div>
+              <div class="profile-stats-grid" id="profile-stats-grid"></div>
+            </section>
+          </div>
+
+          <div class="profile-rail__panel">
+            <section class="profile-card profile-card--in-rail" id="profile-section-account">
+              <div class="profile-card__head">
+                <h2 class="profile-card__title">Account information</h2>
+                <span class="profile-card__tag">You</span>
+              </div>
+              <dl class="profile-dl" id="profile-dl-employee"></dl>
+              <form class="profile-name-form" id="profile-name-form" autocomplete="name" style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+                <div class="profile-name-form__row">
+                  <label class="visually-hidden" for="profile-name-input">Name</label>
+                  <input type="text" id="profile-name-input" name="name" maxlength="200" required placeholder="Name" />
+                  <button type="submit" id="profile-name-save">Save</button>
+                </div>
+                <p class="profile-name-form__status" id="profile-name-save-status" aria-live="polite"></p>
+              </form>
+            </section>
+          </div>
+
+          <div class="profile-rail__panel">
+            <section class="profile-card profile-card--in-rail" id="profile-section-tags">
+              <div class="profile-card__head">
+                <h2 class="profile-card__title">Access cards</h2>
+                <span class="profile-card__tag">Newest first</span>
+              </div>
+              <div class="profile-tags-empty" id="profile-tags-empty" hidden>No access cards linked to this account.</div>
+              <div id="profile-tags-list"></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/script.js"></script>
+  <script src="/pages/profile/script.js"></script>
+</body>
+</html>

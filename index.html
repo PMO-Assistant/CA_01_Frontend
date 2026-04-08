@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Meta, fonts (Poppins), Lucide icons, global styling.css -->
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hot Desking App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="./styling.css" />
+</head>
+<body class="homepage">
+  <main class="container home-main">
+    <!-- Dashboard: welcome row, tile grid (profile, progress, clock, bookings, news, weather, calendar), idle modal, finish-session -->
+
+    <section class="welcome-row">
+      <h1>Welcome in, <span class="username-bold">Enos Pinheiro</span></h1>
+      <p>Hot desking workspace portal</p>
+    </section>
+
+    <section class="main-grid">
+      <article class="panel square-panel profile-panel">
+        <div class="profile-image-wrap">
+          <img
+            src="./Components/avatar-placeholder.svg"
+            alt=""
+          />
+
+          <div class="profile-overlay">
+            <div class="profile-text">
+              <h2>Enos</h2>
+              <p>Workspace User</p>
+            </div>
+
+            <a class="profile-manage-btn" href="./pages/profile/index.html">
+              <i data-lucide="circle-user-round" aria-hidden="true"></i>
+              <span>Profile</span>
+            </a>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel square-panel weekly-panel">
+        <div class="panel-head">
+          <h2>Weekly Progress</h2>
+          <span id="weeklyTotal" class="panel-meta">0h / 40h</span>
+        </div>
+
+        <div class="week-progress-layout">
+          <div class="session-clock">
+            <span class="session-clock-label">Today total</span>
+            <span class="session-clock-value">
+              <span id="sessionClockMain">00:00</span><span id="sessionClockSeconds">:00</span>
+            </span>
+          </div>
+
+          <div class="week-list">
+            <div class="week-item" data-hours="8.0">
+              <div class="day">M</div>
+              <span class="dot"></span>
+              <div class="bar"><span></span></div>
+            </div>
+
+            <div class="week-item" data-hours="7.5">
+              <div class="day">T</div>
+              <span class="dot"></span>
+              <div class="bar"><span></span></div>
+            </div>
+
+            <div class="week-item" data-hours="8.0">
+              <div class="day">W</div>
+              <span class="dot"></span>
+              <div class="bar"><span></span></div>
+            </div>
+
+            <div class="week-item" data-hours="6.5">
+              <div class="day">T</div>
+              <span class="dot"></span>
+              <div class="bar"><span></span></div>
+            </div>
+
+            <div class="week-item" data-hours="7.0">
+              <div class="day">F</div>
+              <span class="dot"></span>
+              <div class="bar"><span></span></div>
+            </div>
+          </div>
+        </div>
+
+        <p id="weeklyNote" class="weekly-note">Loading weekly status...</p>
+        <div class="weekly-clock-action">
+          <button
+            id="clockToggleBtn"
+            class="action-btn action-btn-primary weekly-clock-btn"
+            type="button"
+            aria-pressed="false"
+          >
+            <div class="clock-btn-content">
+              <div class="clock-morph-icon" aria-hidden="true">
+                <div class="clock-part clock-left"></div>
+                <div class="clock-part clock-right"></div>
+              </div>
+              <span class="clock-label">Clock In</span>
+            </div>
+          </button>
+        </div>
+      </article>
+
+      <article class="panel square-panel bookings-panel">
+        <div class="panel-head">
+          <h2>Today Bookings</h2>
+          <span class="panel-meta">Status</span>
+        </div>
+
+        <div class="booking-gear-content" aria-label="Equipment request">
+          <div class="asset-promo-visual" aria-hidden="true">
+            <span class="asset-promo-orb asset-promo-orb--a"><i data-lucide="monitor"></i></span>
+            <span class="asset-promo-orb asset-promo-orb--b"><i data-lucide="speaker"></i></span>
+            <span class="asset-promo-orb asset-promo-orb--c"><i data-lucide="presentation"></i></span>
+            <span class="asset-promo-orb asset-promo-orb--d"><i data-lucide="package"></i></span>
+          </div>
+          <p class="asset-promo-title">Need an extra monitor or gear?</p>
+          <p class="asset-promo-sub">Have a look in what we can offer you.</p>
+        </div>
+        <a class="asset-more-cta" href="./pages/list-of-assets/index.html">
+          <i data-lucide="arrow-up-right" aria-hidden="true"></i>
+          <span>Equipment &amp; list</span>
+        </a>
+      </article>
+
+      <article class="panel news-panel">
+        <div class="panel-head news-panel-head">
+          <h2>News</h2>
+        </div>
+
+        <div
+          class="news-carousel"
+          data-news-carousel
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Office news"
+        >
+          <div class="news-carousel-viewport">
+            <ul class="news-carousel-track" data-news-track style="--news-slides: 3">
+              <li class="news-slide" id="news-slide-1" aria-hidden="false">
+                <figure class="news-slide-figure">
+                  <img
+                    src="./Components/News/Q2.png"
+                    alt=""
+                    width="800"
+                    height="480"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption class="news-slide-caption">
+                    <span class="news-read-more">Read More</span>
+                    <h3 class="news-slide-title">Town hall</h3>
+                    <p class="news-slide-sub">Q2 priorities, team wins, and what’s next for the office.</p>
+                  </figcaption>
+                </figure>
+              </li>
+              <li class="news-slide" id="news-slide-2" aria-hidden="true">
+                <figure class="news-slide-figure">
+                  <img
+                    src="./Components/News/Social%20Friday.png"
+                    alt=""
+                    width="800"
+                    height="480"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption class="news-slide-caption">
+                    <span class="news-read-more">Read More</span>
+                    <h3 class="news-slide-title">Social Friday</h3>
+                    <p class="news-slide-sub">This week’s get-together — snacks, music, and good company.</p>
+                  </figcaption>
+                </figure>
+              </li>
+              <li class="news-slide" id="news-slide-3" aria-hidden="true">
+                <figure class="news-slide-figure">
+                  <img
+                    src="./Components/News/Visitors.png"
+                    alt=""
+                    width="800"
+                    height="480"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <figcaption class="news-slide-caption">
+                    <span class="news-read-more">Read More</span>
+                    <h3 class="news-slide-title">Visitor check-in</h3>
+                    <p class="news-slide-sub">A simpler front-desk flow for guests and contractors.</p>
+                  </figcaption>
+                </figure>
+              </li>
+            </ul>
+          </div>
+
+          <div class="news-carousel-footer">
+            <div
+              class="news-carousel-dots"
+              data-news-dots
+              role="tablist"
+              aria-label="Stories"
+            ></div>
+          </div>
+        </div>
+      </article>
+
+      <article
+        id="weatherPanel"
+        class="panel square-panel profile-extra-panel is-weather-loading"
+        aria-busy="true"
+        aria-live="polite"
+      >
+        <div class="panel-head">
+          <h2>Weather</h2>
+        </div>
+
+        <div class="ms-sky">
+          <div class="ms-cloud ms-front">
+            <span class="ms-left-front"></span>
+            <span class="ms-right-front"></span>
+          </div>
+          <span class="ms-sun ms-sunshine"></span>
+          <span class="ms-sun"></span>
+          <div class="ms-cloud ms-back">
+            <span class="ms-left-back"></span>
+            <span class="ms-right-back"></span>
+          </div>
+        </div>
+
+        <div class="ms-card-header">
+          <span id="msLocationText">Dublin</span>
+          <span id="msDateText">…</span>
+          <div class="ms-metrics">
+            <div class="ms-metric-row">
+              <i class="ms-metric-icon" data-lucide="thermometer-sun" aria-hidden="true"></i>
+              <span id="msFeelsLike" class="ms-metric-value">…</span>
+            </div>
+            <div class="ms-metric-row">
+              <i class="ms-metric-icon" data-lucide="cloud-rain" aria-hidden="true"></i>
+              <span id="msPrecipitation" class="ms-metric-value">…</span>
+            </div>
+          </div>
+        </div>
+
+        <span id="msMainValue" class="ms-main-value"><span class="temp-number">—</span><span class="temp-unit">°C</span></span>
+
+        <div class="ms-scale">
+          <span id="msStatusBadge">Loading…</span>
+        </div>
+      </article>
+
+      <article class="panel summary-panel">
+        <div class="summary-content">
+          <div id="overviewTodayDate" class="overview-today-date">18th of March of 2026</div>
+
+          <div class="overview-calendar">
+            <div id="overviewWeekDays" class="overview-week-row"></div>
+            <div id="overviewWeekDates" class="overview-week-row"></div>
+          </div>
+
+          <div id="overviewTodayStatus" class="overview-today-status is-room">
+            <i id="todayStatusIcon" class="today-status-icon" data-lucide="building-2" aria-hidden="true"></i>
+            <p id="todayStatusText" class="today-status-text">Whole room booked</p>
+            <small id="todayStatusMeta" class="today-status-meta">Room 5 - Slot 3C</small>
+          </div>
+
+          <div class="overview-actions">
+            <a
+              class="overview-btn overview-btn-primary"
+              id="overview-new-booking-link"
+              href="./pages/map/index.html"
+            >
+              <i data-lucide="calendar-days" aria-hidden="true"></i>
+              <span>New Booking</span>
+            </a>
+            <a class="overview-btn overview-btn-secondary" href="./pages/my-bookings/index.html">
+              <i data-lucide="layers" aria-hidden="true"></i>
+              <span>Manage Bookings</span>
+            </a>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <div
+    id="session-idle-warning"
+    class="session-idle-warning"
+    hidden
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="session-idle-title"
+    aria-describedby="session-idle-message"
+  >
+    <div class="session-idle-warning__panel">
+      <h2 id="session-idle-title" class="session-idle-warning__title">Still there?</h2>
+      <p id="session-idle-message" class="session-idle-warning__text">
+        Signing out in <span id="session-idle-count" class="session-idle-warning__count">10</span> seconds unless you continue.
+      </p>
+      <button type="button" id="session-idle-stay" class="session-idle-warning__btn">
+        I'm here — stay signed in
+      </button>
+    </div>
+  </div>
+
+  <div class="finish-session-dock" aria-label="Session actions">
+    <button class="action-btn action-btn-dark action-btn-wide finish-session-btn" type="button">
+      <i data-lucide="log-out" aria-hidden="true"></i>
+      <span>Finish Session</span>
+    </button>
+  </div>
+
+  <script src="./hot-desk-config.js"></script>
+  <script src="./script.js"></script>
+</body>
+</html>

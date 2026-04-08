@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in — Hot Desking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="../../styling.css" />
+</head>
+<body class="homepage">
+  <section id="card-login-gate" class="card-login-gate" aria-live="polite">
+    <h1 class="card-login-title">Scan your card to log in</h1>
+    <p class="card-login-subtitle">
+      Hold your badge to the tablet. Tap the card below, then touch the reader with your NFC tag when the browser asks.
+    </p>
+    <p id="card-login-nfc-status" class="card-login-nfc-status" role="status"></p>
+    <button type="button" id="card-pair-phone-btn" class="card-pair-phone-btn">
+      Use phone to scan card
+    </button>
+    <div id="card-login-pair-panel" class="card-login-pair-panel" hidden>
+      <div id="card-login-pair-qr-wrap" class="card-login-pair-qr-wrap">
+        <p class="card-login-pair-qr-label">Scan to open in the browser</p>
+        <div id="card-login-pair-qr" class="card-login-pair-qr" aria-hidden="true"></div>
+      </div>
+      <p class="card-login-pair-url-wrap">
+        <a id="card-login-pair-url" class="card-login-pair-url" href="#" target="_blank" rel="noopener"></a>
+      </p>
+      <p id="card-login-pair-status" class="card-login-pair-status" role="status"></p>
+      <button type="button" id="card-pair-new-phone-btn" class="card-pair-new-phone-btn" hidden>
+        Link a different phone (show QR)
+      </button>
+      <button type="button" id="card-pair-cancel-btn" class="card-pair-cancel-btn">Cancel pairing</button>
+    </div>
+    <div id="card-login-phone-read-banner" class="card-login-phone-read-banner" hidden role="alert" aria-live="assertive">
+      <p class="card-login-phone-read-title">Tag read from phone</p>
+      <p id="card-login-phone-read-body" class="card-login-phone-read-body"></p>
+      <p id="card-login-phone-read-clip" class="card-login-phone-read-clip" hidden>Copied to clipboard — paste with Ctrl+V</p>
+    </div>
+    <button id="card-scan-btn" class="card-scan-btn" type="button" aria-label="Start NFC and scan ID card">
+      <span class="scan-widget-left" aria-hidden="true">
+        <span class="scan-id-card">
+          <span class="scan-id-photo-wrap">
+            <img
+              src="../../Components/avatar-placeholder.svg"
+              alt=""
+            />
+          </span>
+          <span class="scan-id-name"></span>
+          <span class="scan-id-role"></span>
+        </span>
+      </span>
+    </button>
+  </section>
+
+  <script src="../../hot-desk-config.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script src="../../script.js"></script>
+</body>
+</html>

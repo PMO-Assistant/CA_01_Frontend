@@ -592,7 +592,7 @@ function setupCardLoginGate(options) {
       }
       if (res && res.status === 404) {
         setNfcStatus(
-          "NFC bridge API not enabled — set HOT_DESK_NFC_BRIDGE_KEY in Backend appsettings (non-empty) and restart the API.",
+          "Phone bridge is disabled. Use direct NFC on this device, or open the QR page on your phone and scan there.",
           true
         );
         return;
@@ -1040,38 +1040,20 @@ function setupCardLoginGate(options) {
 
     resolvePairingFrontendOrigin()
       .then(function (originForPhone) {
-        return hotDeskApiJsonSimple("POST", "/api/nfc-pairing/sessions", {}).then(function (data) {
-          return { data: data, originForPhone: originForPhone };
-        });
-      })
-      .then(function (bundle) {
-        const data = bundle.data;
-        const originForPhone = (bundle.originForPhone || window.location.origin).replace(/\/$/, "");
-        const pairingId = data && data.pairingId;
-        if (!pairingId) throw new Error("No pairing id");
-        stopPairPolling();
-        activePairingId = pairingId;
-
-        const pairPage = new URL("pages/nfc-pair/index.html", originForPhone + "/");
-        pairPage.searchParams.set("pairing", pairingId);
-        pairUrlA.href = pairPage.href;
-        pairUrlA.textContent = pairPage.href;
-        renderPairingQr(pairPage.href);
-
+        const originForPhoneNorm = (originForPhone || window.location.origin).replace(/\/$/, "");
+        const pairPageStatic = new URL("pages/nfc-pair/index.html", originForPhoneNorm + "/");
+        pairUrlA.href = pairPageStatic.href;
+        pairUrlA.textContent = pairPageStatic.href;
+        renderPairingQr(pairPageStatic.href);
         if (pairStatusEl) {
-          if (isLoopbackHostname(pairPage.hostname)) {
+          if (isLoopbackHostname(pairPageStatic.hostname)) {
             pairStatusEl.textContent =
-              "This link is still localhost — your phone cannot open it. Repo-root “npm run dev” tunnels port 3000; Backend-only “npm run dev” uses 4000. Or add ?ngrok=https://… to this URL, set HOT_DESK_PUBLIC_ORIGIN in hot-desk-config.js, or use your PC’s LAN IP.";
+              "This link is still localhost — your phone cannot open it. Use ngrok or HOT_DESK_PUBLIC_ORIGIN.";
           } else {
-            pairStatusEl.textContent = "Waiting for your phone to scan…";
+            pairStatusEl.textContent =
+              "Open this on your phone, tap Scan, and hold the badge to log in there.";
           }
         }
-
-        pollPairingOnce(pairingId);
-        pairPollTimer = setInterval(function () {
-          pollPairingOnce(pairingId);
-        }, 1500);
-
         if (window.lucide && typeof window.lucide.createIcons === "function") {
           window.lucide.createIcons();
         }
@@ -1080,7 +1062,7 @@ function setupCardLoginGate(options) {
         stopPairPolling();
         if (pairStatusEl) {
           pairStatusEl.textContent =
-            (err && err.message) || "Could not reach the API. Is the backend running on port 4000?";
+            (err && err.message) || "Could not resolve a public URL for the QR code.";
         }
       });
   }

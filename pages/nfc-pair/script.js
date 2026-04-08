@@ -276,13 +276,69 @@
           }
         }
       }
-      if (sawNetworkFailure) {
-        throw new Error(
-          "Could not reach the API on port 4000. Start the backend on your PC (npm run dev in Backend)."
-        );
-      }
+      if (sawNetworkFailure) throw new Error("Could not reach the API.");
       throw lastErr || new Error("Request failed");
     })();
+  }
+
+  function bindDirectLoginScanButton(scanBtn, setStatus) {
+    var scanAbort = null;
+    scanBtn.addEventListener("click", function (ev) {
+      if (ev && typeof ev.preventDefault === "function") ev.preventDefault();
+      (async function () {
+        if (scanAbort) {
+          try {
+            scanAbort.abort();
+          } catch (_) {}
+          scanAbort = null;
+        }
+        setStatus("Preparing NFC reader…", false);
+        var ndef;
+        try {
+          ndef = new window.NDEFReader();
+        } catch (e) {
+          setStatus((e && e.message) || "Could not create NDEFReader.", true);
+          return;
+        }
+        scanAbort = typeof AbortController !== "undefined" ? new AbortController() : null;
+        var signal = scanAbort ? scanAbort.signal : undefined;
+        ndef.addEventListener(
+          "reading",
+          function (evr) {
+            const serial = evr.serialNumber || "";
+            const fromRecords = nfcReadableIdFromMessage(evr.message);
+            let token = String(fromRecords || serial || "").trim();
+            if (!token) token = "nfc-" + String(Date.now());
+            setStatus("Tag read — signing in…", false);
+            hotDeskApiJsonSimple("POST", "/api/auth/nfc", { nfcUid: token })
+              .then(function () {
+                setStatus("Login successful. You can go back to home.", false);
+              })
+              .catch(function (err) {
+                setStatus((err && err.message) || "Card not registered or inactive.", true);
+              });
+          },
+          { once: true }
+        );
+        ndef.addEventListener(
+          "readingerror",
+          function () {
+            setStatus("Could not read this tag. Try again.", true);
+          },
+          { once: true }
+        );
+        try {
+          if (signal) await ndef.scan({ signal: signal });
+          else await ndef.scan();
+          setStatus("NFC listening — hold badge to the back of the phone.", false);
+        } catch (err) {
+          if (err && err.name === "AbortError") return;
+          setStatus((err && err.message) || "NFC could not start.", true);
+        }
+      })().catch(function (err) {
+        setStatus((err && err.message) || "Unexpected error.", true);
+      });
+    });
   }
 
   function loadPhoneDeviceCreds() {
@@ -590,27 +646,15 @@
     }
 
     if (!pairingId) {
-      if (titleEl) titleEl.textContent = "Link this phone once";
-      scanBtn.textContent = "How to link (tap here)";
+      if (titleEl) titleEl.textContent = "Scan card";
+      scanBtn.textContent = "Scan NFC badge";
       scanBtn.disabled = false;
       if (leadEl) {
         leadEl.textContent =
-          "Configure HOT_DESK_NFC_BRIDGE_KEY in hot-desk-config.js (same as the backend) for the simple one-URL flow, or open the kiosk QR that includes pairing=…";
+          "Tap scan, hold your badge, and this page signs in directly using the backend API.";
       }
-      var helpLines = [
-        "No NFC bridge key on this page, and no ?pairing= link.",
-        "",
-        "Preferred: set window.HOT_DESK_NFC_BRIDGE_KEY in Frontend/hot-desk-config.js to match Backend appsettings HOT_DESK_NFC_BRIDGE_KEY, then open this page from the kiosk QR (no query string needed).",
-        "",
-        "Or use the legacy flow: kiosk “Use phone to scan card” → QR with pairing=… → scan badge here.",
-      ].join("\n");
-      setStatus("Tap the button for help, or open the link from the kiosk QR.", true);
-      scanBtn.addEventListener("click", function showNfcPairingHelp() {
-        setStatus(helpLines, true);
-        try {
-          window.alert(helpLines);
-        } catch (_) {}
-      });
+      setStatus("Ready to scan.");
+      bindDirectLoginScanButton(scanBtn, setStatus);
       return;
     }
 

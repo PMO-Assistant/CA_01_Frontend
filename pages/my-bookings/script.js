@@ -35,6 +35,45 @@
   let loadError = "";
   let managingBooking = null;
   const assetOverflowUpdaters = [];
+  const HOT_DESK_SESSION_TOKEN = "hotDeskSessionToken";
+
+  function sessionHeaders() {
+    try {
+      const t = sessionStorage.getItem(HOT_DESK_SESSION_TOKEN);
+      if (t && String(t).trim()) return { "X-Hot-Desk-Session": String(t).trim() };
+    } catch (_) {}
+    return {};
+  }
+
+  function apiCandidates(path) {
+    const out = [];
+    const seen = Object.create(null);
+    const push = (u) => {
+      if (!u || seen[u]) return;
+      seen[u] = true;
+      out.push(u);
+    };
+    const configuredApi =
+      typeof window.HOT_DESK_API === "string" && window.HOT_DESK_API.trim()
+        ? window.HOT_DESK_API.trim().replace(/\/$/, "")
+        : "";
+    if (configuredApi) push(configuredApi + path);
+    if (window.location.protocol !== "file:") {
+      const h = (window.location.hostname || "").toLowerCase();
+      const isLocal =
+        h === "localhost" ||
+        h === "127.0.0.1" ||
+        h === "[::1]" ||
+        /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(h);
+      if (isLocal) {
+        push(window.location.origin.replace(/\/$/, "") + path);
+        const proto = window.location.protocol === "https:" ? "https" : "http";
+        push(proto + "://" + window.location.hostname + ":4000" + path);
+      }
+    }
+    push("http://localhost:4000" + path);
+    return out;
+  }
 
   function showToast(msg, isError) {
     toastEl.textContent = msg;
@@ -299,12 +338,7 @@
   }
 
   async function fetchAssetsFromSqlApi() {
-    const urls = [];
-    if (typeof window.HOT_DESK_API === "string" && window.HOT_DESK_API.trim()) {
-      urls.push(window.HOT_DESK_API.trim().replace(/\/$/, "") + "/api/assets");
-    }
-    if (window.location.protocol !== "file:") urls.push("/api/assets");
-    urls.push("http://localhost:4000/api/assets");
+    const urls = apiCandidates("/api/assets");
 
     const tried = [];
     let lastErr = null;
@@ -313,7 +347,7 @@
       if (tried.indexOf(url) !== -1) continue;
       tried.push(url);
       try {
-        const res = await fetch(url, { credentials: "omit" });
+        const res = await fetch(url, { credentials: "omit", headers: sessionHeaders() });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         if (!Array.isArray(data)) throw new Error("Expected JSON array from /api/assets");
@@ -332,16 +366,14 @@
     const params = new URLSearchParams();
     params.set("start", start.toISOString());
     params.set("end", end.toISOString());
-    const urls = [];
-    if (window.location.protocol !== "file:") urls.push("/api/bookings/availability?" + params.toString());
-    urls.push("http://localhost:4000/api/bookings/availability?" + params.toString());
+    const urls = apiCandidates("/api/bookings/availability?" + params.toString());
     const tried = [];
     for (let i = 0; i < urls.length; i += 1) {
       const url = urls[i];
       if (tried.indexOf(url) !== -1) continue;
       tried.push(url);
       try {
-        const res = await fetch(url, { credentials: "omit" });
+        const res = await fetch(url, { credentials: "omit", headers: sessionHeaders() });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         const ids = new Set();
@@ -357,13 +389,13 @@
 
   async function patchBookingAssets(bookingId, selectedAssetIds) {
     const path = "/api/bookings/" + encodeURIComponent(String(bookingId));
-    const urls = window.location.protocol !== "file:" ? [path] : ["http://localhost:4000" + path];
+    const urls = apiCandidates(path);
     let lastErr = null;
     for (let i = 0; i < urls.length; i += 1) {
       try {
         const res = await fetch(urls[i], {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...sessionHeaders() },
           credentials: "include",
           body: JSON.stringify({
             selectedAssets: selectedAssetIds.map((assetId) => ({ assetId })),
@@ -478,16 +510,14 @@
 
   async function fetchBookingsJson() {
     if (!Number.isFinite(empId) || empId < 1) {
-      const meUrls = [];
-      if (typeof window.HOT_DESK_API === "string" && window.HOT_DESK_API.trim()) {
-        meUrls.push(window.HOT_DESK_API.trim().replace(/\/$/, "") + "/api/auth/me");
-      }
-      if (window.location.protocol !== "file:") meUrls.push("/api/auth/me");
-      meUrls.push("http://localhost:4000/api/auth/me");
+      const meUrls = apiCandidates("/api/auth/me");
       let me = null;
       for (let mi = 0; mi < meUrls.length; mi += 1) {
         try {
-          const r = await fetch(meUrls[mi], { credentials: "include" });
+          const r = await fetch(meUrls[mi], {
+            credentials: "include",
+            headers: sessionHeaders(),
+          });
           if (!r.ok) continue;
           me = await r.json();
           if (me && Number.isFinite(Number(me.empId))) break;
@@ -500,12 +530,7 @@
       metaEl.textContent = "Showing bookings for " + (me.name || ("employee #" + String(empId)));
     }
     const qs = "?empId=" + encodeURIComponent(String(empId));
-    const urls = [];
-    if (typeof window.HOT_DESK_API === "string" && window.HOT_DESK_API.trim()) {
-      urls.push(window.HOT_DESK_API.trim().replace(/\/$/, "") + "/api/bookings" + qs);
-    }
-    if (window.location.protocol !== "file:") urls.push("/api/bookings" + qs);
-    urls.push("http://localhost:4000/api/bookings" + qs);
+    const urls = apiCandidates("/api/bookings" + qs);
 
     const tried = [];
     let lastErr = null;
@@ -514,7 +539,7 @@
       if (tried.indexOf(url) !== -1) continue;
       tried.push(url);
       try {
-        const res = await fetch(url, { credentials: "include" });
+        const res = await fetch(url, { credentials: "include", headers: sessionHeaders() });
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
         if (data && typeof data.error === "string" && !Array.isArray(data)) {
@@ -531,7 +556,7 @@
 
   async function deleteBooking(bookingId) {
     const path = "/api/bookings/" + encodeURIComponent(String(bookingId));
-    const urls = window.location.protocol !== "file:" ? [path] : ["http://localhost:4000" + path];
+    const urls = apiCandidates(path);
 
     const tried = [];
     let lastErr = null;
@@ -540,7 +565,11 @@
       if (tried.indexOf(url) !== -1) continue;
       tried.push(url);
       try {
-        const res = await fetch(url, { method: "DELETE", credentials: "include" });
+        const res = await fetch(url, {
+          method: "DELETE",
+          credentials: "include",
+          headers: sessionHeaders(),
+        });
         if (res.status === 404) throw new Error("Booking not found");
         if (!res.ok) {
           const text = await res.text();
@@ -712,7 +741,7 @@
       console.error("[my-bookings]", e);
       bookings = [];
       loadError =
-        "Could not load bookings from the server. Start the Backend API, run <code>npx prisma db seed</code> if you need sample rows, open from the same origin as the API, or set <code>window.HOT_DESK_API</code> to your API base URL.";
+        "Could not load bookings from the server. Check the API is reachable and that <code>window.HOT_DESK_API</code> points to your backend.";
     }
     render();
   }

@@ -144,30 +144,46 @@
     return /^[A-Za-z0-9][A-Za-z0-9 .,'()\-_/]{1,79}$/.test(value);
   }
 
-  async function apiJson(method, path, body) {
-    const urls = [];
+  function sessionHeader() {
+    try {
+      const t = sessionStorage.getItem("hotDeskSessionToken");
+      if (t && String(t).trim()) return { "X-Hot-Desk-Session": String(t).trim() };
+    } catch (_) {}
+    return {};
+  }
+
+  function apiCandidates(path) {
+    const out = [];
+    const seen = Object.create(null);
+    function push(u) {
+      if (!u || seen[u]) return;
+      seen[u] = true;
+      out.push(u);
+    }
     const apiBase =
       typeof window.HOT_DESK_API === "string" && window.HOT_DESK_API.trim()
         ? window.HOT_DESK_API.trim().replace(/\/$/, "")
         : "";
-    let onlyApiOrigin = false;
+    if (apiBase) push(apiBase + path);
     if (window.location.protocol !== "file:") {
-      try {
-        const page = new URL(window.location.href);
-        const pageOrigin = page.origin;
-        const onBackendPort = page.port === "4000";
-        const onSameOriginAsConfiguredApi = apiBase && pageOrigin === apiBase;
-        if (onBackendPort || onSameOriginAsConfiguredApi) {
-          urls.push(pageOrigin + path);
-          onlyApiOrigin = true;
-        }
-      } catch (_) {}
+      const h = (window.location.hostname || "").toLowerCase();
+      const isLocal =
+        h === "localhost" ||
+        h === "127.0.0.1" ||
+        h === "[::1]" ||
+        /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(h);
+      if (isLocal) {
+        push(window.location.origin.replace(/\/$/, "") + path);
+        const proto = window.location.protocol === "https:" ? "https" : "http";
+        push(proto + "://" + window.location.hostname + ":4000" + path);
+      }
     }
-    if (!onlyApiOrigin) {
-      if (apiBase) urls.push(apiBase + path);
-      if (window.location.protocol !== "file:") urls.push(path);
-      urls.push("http://localhost:4000" + path);
-    }
+    push("http://localhost:4000" + path);
+    return out;
+  }
+
+  async function apiJson(method, path, body) {
+    const urls = apiCandidates(path);
 
     const tried = [];
     let lastErr = null;
@@ -178,7 +194,7 @@
       try {
         const res = await fetch(url, {
           method,
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...sessionHeader() },
           credentials: "include",
           body: body === undefined ? undefined : JSON.stringify(body),
         });

@@ -11,6 +11,7 @@ const inferredVercelOrigin = (function () {
 const publicOrigin = (process.env.HOT_DESK_PUBLIC_ORIGIN || inferredVercelOrigin || "").trim().replace(/\/$/, "");
 const apiBase = (process.env.HOT_DESK_API || "https://cabackend.herokuapp.com").trim().replace(/\/$/, "");
 const autoDevSession = (process.env.HOT_DESK_AUTO_DEV_SESSION || "0").trim() === "1";
+const nfcBridgeKey = (process.env.HOT_DESK_NFC_BRIDGE_KEY || "").trim();
 
 const outFile = path.join(__dirname, "..", "hot-desk-config.js");
 const content =
@@ -20,9 +21,11 @@ const content =
   " */\n" +
   `window.HOT_DESK_PUBLIC_ORIGIN = ${JSON.stringify(publicOrigin)};\n` +
   `window.HOT_DESK_API = ${JSON.stringify(apiBase)};\n` +
-  `window.HOT_DESK_AUTO_DEV_SESSION = ${autoDevSession ? "true" : "false"};\n`;
+  `window.HOT_DESK_AUTO_DEV_SESSION = ${autoDevSession ? "true" : "false"};\n` +
+  `window.HOT_DESK_NFC_BRIDGE_KEY = ${JSON.stringify(nfcBridgeKey)};\n`;
 
 fs.writeFileSync(outFile, content, "utf8");
 console.log("[build-config] wrote Frontend/hot-desk-config.js");
 console.log("[build-config] HOT_DESK_PUBLIC_ORIGIN =", publicOrigin || "(empty)");
 console.log("[build-config] HOT_DESK_API =", apiBase);
+console.log("[build-config] HOT_DESK_NFC_BRIDGE_KEY =", nfcBridgeKey ? "(set)" : "(empty)");

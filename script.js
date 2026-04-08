@@ -7,7 +7,26 @@
 const CARD_LOGIN_KEY = "hotDeskCardLoggedIn";
 /** Set before redirect to home so tryRestoreSessionFromCookie can retry once if the cookie is not readable yet. */
 const HOT_DESK_FRESH_NFC_LOGIN = "hotDeskFreshNfcLogin";
+const HOT_DESK_SESSION_TOKEN = "hotDeskSessionToken";
 const LS_KIOSK_PHONE_SCANNER = "hotDeskKioskPhoneScanner";
+
+function loadSessionToken() {
+  try {
+    var t = sessionStorage.getItem(HOT_DESK_SESSION_TOKEN);
+    return t ? String(t) : "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function saveSessionTokenMaybe(payload) {
+  if (!payload || typeof payload !== "object") return;
+  var token = payload.sessionToken;
+  if (!token || typeof token !== "string") return;
+  try {
+    sessionStorage.setItem(HOT_DESK_SESSION_TOKEN, token.trim());
+  } catch (_) {}
+}
 
 function loadKioskPhoneScannerCreds() {
   try {
@@ -203,13 +222,17 @@ function hotDeskApiJsonSimple(method, path, body) {
   return (async function () {
     for (let i = 0; i < urls.length; i += 1) {
       try {
+        const token = loadSessionToken();
+        const headers = { "Content-Type": "application/json" };
+        if (token) headers["X-Hot-Desk-Session"] = token;
         const res = await fetch(urls[i], {
           method,
-          headers: { "Content-Type": "application/json" },
+          headers: headers,
           credentials: "include",
           body: body === undefined ? undefined : JSON.stringify(body),
         });
         const data = await res.json().catch(() => ({}));
+        saveSessionTokenMaybe(data);
         if (!res.ok) throw new Error((data && data.error) || "HTTP " + res.status);
         return data;
       } catch (e) {
@@ -269,6 +292,8 @@ async function tryRestoreSessionFromCookie(options) {
       credentials: "include",
       body,
     };
+    var token = loadSessionToken();
+    if (token) fetchOpts.headers["X-Hot-Desk-Session"] = token;
     let res = await fetch(urls[0], fetchOpts);
     if (res.status === 401 && sessionStorage.getItem(HOT_DESK_FRESH_NFC_LOGIN) === "1") {
       await new Promise(function (r) {
@@ -283,6 +308,7 @@ async function tryRestoreSessionFromCookie(options) {
       const me = await res.json().catch(function () {
         return null;
       });
+      saveSessionTokenMaybe(me);
       if (me && me.name) {
         sessionStorage.setItem(CARD_LOGIN_KEY, "1");
         updateWelcomeUserName(me.name);
@@ -793,6 +819,7 @@ function setupCardLoginGate(options) {
   }
 
   function finalizeNfcGateSuccess(_token, _serial, _fromRecords, auth) {
+    saveSessionTokenMaybe(auth);
     sessionStorage.setItem(CARD_LOGIN_KEY, "1");
     setNfcStatus("");
     if (pairPanel) pairPanel.hidden = true;
@@ -807,6 +834,7 @@ function setupCardLoginGate(options) {
   }
 
   function applyPairingLoginAfterAuth(auth, _st) {
+    saveSessionTokenMaybe(auth);
     sessionStorage.setItem(CARD_LOGIN_KEY, "1");
     setNfcStatus("");
     if (pairPanel) pairPanel.hidden = true;
@@ -1656,6 +1684,7 @@ function highlightToday(items) {
 function performAppLogoutRedirect() {
   authLogoutAllUrls().finally(function () {
     sessionStorage.removeItem(CARD_LOGIN_KEY);
+    sessionStorage.removeItem(HOT_DESK_SESSION_TOKEN);
     try {
       window.location.replace(new URL("pages/sign-in/index.html", window.location.href).href);
     } catch (_) {
